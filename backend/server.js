@@ -1,18 +1,19 @@
 require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 const db = require('./db')
 const app = express()
 const port = process.env.PORT || 3002
 
 /*app.use(morgan('dev'))*/
+app.use(cors())
 app.use(express.json())
 
 //Get all restaurants
 app.get('/api/v1/restaurants', async (req, res) => {
     try {
         const result = await db.query('select * from restaurants')
-        console.log(result.rows)
         res.status(200).json({
             status: 'success',
             result: result.rows.length,
@@ -33,7 +34,7 @@ app.get('/api/v1/restaurants/:id', async (req, res) => {
         res.status(200).json({
             status: 'success',
             data: {
-                restaurants: result.rows[0]
+                restaurant: result.rows[0]
             }
         })
     } catch (err) {
@@ -50,7 +51,7 @@ app.post('/api/v1/restaurants', async (req, res) => {
         res.status(200).json({
             status: 'success',
             data: {
-                restaurants: result.rows[0]
+                restaurant: result.rows[0]
             }
         })
     } catch (err) {
@@ -79,8 +80,10 @@ app.put('/api/v1/restaurants/:id', async (req, res) => {
 //Delete restaurant
 app.delete('/api/v1/restaurants/:id', async (req, res) => {
     try {
-        await db.query('delete from restaurants where id=$1', [req.params.id])
-        res.status(204)
+        const result = await db.query('delete from restaurants where id=$1 returning *', [req.params.id])
+        res.status(204).json({
+            status: 'success',
+        })
     } catch (err) {
         console.log(err)
     }
